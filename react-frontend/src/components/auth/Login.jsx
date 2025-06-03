@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import api from '../../utils/api';
 import endpoints from '../../config/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -27,9 +28,7 @@ export default function Login() {
     setError('');
     
     try {
-      const response = await axios.post(endpoints.login, formData, {
-        withCredentials: true
-      });
+      const response = await api.post(endpoints.login, formData);
       
       if (response.data) {
         await login(response.data);

@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
             withCredentials: true,
           });
 
-          if (response.data.isAuthenticated) {
+          if (response.data.authenticated) {
             setUser(JSON.parse(storedUser));
           } else {
             // If session is invalid, clear localStorage
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
         withCredentials: true,
       });
 
-      if (response.data.isAuthenticated) {
+      if (response.data.authenticated) {
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
       } else {

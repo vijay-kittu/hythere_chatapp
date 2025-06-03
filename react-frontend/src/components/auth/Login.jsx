@@ -28,30 +28,13 @@ export default function Login() {
     setError('');
     
     try {
-      console.log('Attempting login with:', formData);
       const response = await api.post(endpoints.login, formData);
-      console.log('Login response:', {
-        data: response.data,
-        status: response.status,
-        headers: response.headers
-      });
       
       if (response.data) {
-        console.log('Login successful, attempting to establish session...');
         await login(response.data);
         navigate('/', { replace: true });
       }
     } catch (err) {
-      console.error('Login error details:', {
-        message: err.message,
-        response: err.response ? {
-          data: err.response.data,
-          status: err.response.status,
-          headers: err.response.headers,
-        } : 'No response object',
-        stack: err.stack
-      });
-      
       if (err.message === 'Authentication failed') {
         setError('Session could not be established. Please try again.');
       } else {

@@ -74,9 +74,6 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (userData) => {
     try {
-      console.log("Starting login verification...");
-      console.log("UserData received:", userData);
-
       // Store user data first
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
@@ -93,36 +90,21 @@ export const AuthProvider = ({ children }) => {
             setTimeout(resolve, 1000 * (attempts + 1))
           );
 
-          console.log(`Verification attempt ${attempts + 1}/${maxAttempts}`);
           const response = await api.get(endpoints.checkAuth, {
             withCredentials: true,
           });
 
-          console.log(`Attempt ${attempts + 1} response:`, {
-            data: response.data,
-            status: response.status,
-            headers: response.headers,
-          });
-
           if (response.data.authenticated) {
-            console.log("Session verified successfully");
             verified = true;
             break;
-          } else {
-            console.log(`Attempt ${attempts + 1} failed, session not verified`);
           }
         } catch (verifyError) {
-          console.log(`Attempt ${attempts + 1} error:`, verifyError);
+          // Continue to next attempt
         }
         attempts++;
       }
 
       if (!verified) {
-        console.error(
-          "Failed to verify session after",
-          maxAttempts,
-          "attempts"
-        );
         setUser(null);
         localStorage.removeItem("user");
         throw new Error("Could not establish session after multiple attempts");

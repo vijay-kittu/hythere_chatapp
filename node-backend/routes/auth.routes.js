@@ -47,14 +47,12 @@ router.post("/register", async (req, res) => {
     });
 
     if (user) {
-      console.log("Setting session for new user:", user._id);
       req.session.userId = user._id;
       req.session.save((err) => {
         if (err) {
           console.error("Session save error:", err);
           return res.status(500).json({ error: "Error saving session" });
         }
-        console.log("Session saved successfully for new user");
         res.status(201).json({
           _id: user._id,
           email: user.email,
@@ -118,15 +116,7 @@ router.post("/login", async (req, res) => {
 
 // Check Authentication Status
 router.get("/check", (req, res) => {
-  console.log("Checking auth status. Full request details:", {
-    session: req.session,
-    sessionID: req.sessionID,
-    cookies: req.cookies,
-    headers: req.headers,
-  });
-
   if (req.session && req.session.userId) {
-    console.log("Session is valid for user:", req.session.userId);
     res.json({
       authenticated: true,
       userId: req.session.userId,
@@ -140,24 +130,17 @@ router.get("/check", (req, res) => {
     });
     res.json({
       authenticated: false,
-      debug: {
-        sessionExists: !!req.session,
-        sessionID: req.sessionID,
-        hasCookies: !!req.cookies,
-      },
     });
   }
 });
 
 // Logout
 router.post("/logout", (req, res) => {
-  console.log("Logout attempt for session:", req.session.id);
   req.session.destroy((err) => {
     if (err) {
       console.error("Logout error:", err);
       return res.status(500).json({ error: "Error during logout" });
     }
-    console.log("Session destroyed successfully");
     res.json({ message: "Logged out successfully" });
   });
 });

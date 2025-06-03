@@ -104,8 +104,6 @@ io.use((socket, next) => {
 
 // Socket.io connection handling
 io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.userId}`);
-
   // Join user to their personal room
   socket.join(socket.userId);
 

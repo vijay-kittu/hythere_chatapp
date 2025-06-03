@@ -25,6 +25,10 @@ const io = new Server(httpServer, {
 
 // Middleware
 app.use(express.json());
+
+// Add trust proxy setting BEFORE other middleware
+app.set("trust proxy", 1);
+
 app.use(
   cors({
     origin: FRONTEND_URL,
@@ -38,34 +42,42 @@ app.use(
 // Session middleware - MUST be before routes
 const sessionMiddleware = session({
   secret: process.env.SESSION_SECRET || "chat-app-secret",
-  resave: false,
+  resave: true,
   saveUninitialized: false,
   proxy: true,
   cookie: {
-    secure: process.env.NODE_ENV === "production", // Set to true in production
+    secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    path: "/",
     domain:
       process.env.NODE_ENV === "production"
         ? process.env.COOKIE_DOMAIN
         : undefined,
   },
-  name: "sessionId", // Add a custom name to track the cookie easier
+  name: "sessionId",
+  rolling: true, // Refresh cookie on each request
 });
-
-// Add trust proxy setting
-app.set("trust proxy", 1);
 
 app.use(sessionMiddleware);
 
 // Add session debugging middleware
 app.use((req, res, next) => {
-  console.log("Session Debug:", {
-    id: req.session.id,
-    userId: req.session.userId,
-    cookie: req.session.cookie,
-  });
+  const debugInfo = {
+    sessionId: req.sessionID,
+    userId: req.session?.userId,
+    cookies: req.cookies,
+    secure: req.secure,
+    protocol: req.protocol,
+    hostname: req.hostname,
+    headers: {
+      origin: req.headers.origin,
+      host: req.headers.host,
+      cookie: req.headers.cookie,
+    },
+  };
+  console.log("Request Debug Info:", debugInfo);
   next();
 });
 

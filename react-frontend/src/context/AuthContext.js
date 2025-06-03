@@ -17,21 +17,51 @@ export const AuthProvider = ({ children }) => {
         const storedUser = localStorage.getItem("user");
 
         if (storedUser) {
-          // Verify session with backend
-          const response = await api.get(endpoints.checkAuth, {
-            withCredentials: true,
-          });
+          let verified = false;
+          let attempts = 0;
+          const maxAttempts = 3;
 
-          if (response.data.authenticated) {
-            setUser(JSON.parse(storedUser));
-          } else {
-            // If session is invalid, clear localStorage
+          while (!verified && attempts < maxAttempts) {
+            try {
+              // Add increasing delay between attempts
+              await new Promise((resolve) =>
+                setTimeout(resolve, 1000 * (attempts + 1))
+              );
+
+              console.log(
+                `Initial verification attempt ${attempts + 1}/${maxAttempts}`
+              );
+              const response = await api.get(endpoints.checkAuth, {
+                withCredentials: true,
+              });
+
+              if (response.data.authenticated) {
+                console.log("Initial session verified successfully");
+                setUser(JSON.parse(storedUser));
+                verified = true;
+                break;
+              } else {
+                console.log(
+                  `Initial verification attempt ${attempts + 1} failed`
+                );
+              }
+            } catch (verifyError) {
+              console.log(
+                `Initial verification attempt ${attempts + 1} error:`,
+                verifyError
+              );
+            }
+            attempts++;
+          }
+
+          if (!verified) {
+            console.log("Failed to verify initial session, clearing user data");
             localStorage.removeItem("user");
             setUser(null);
           }
         }
       } catch (error) {
-        console.error("Session verification error:", error);
+        console.error("Initial session verification error:", error);
         localStorage.removeItem("user");
         setUser(null);
       } finally {
@@ -51,31 +81,51 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
 
-      // Add a small delay before checking auth
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Try to verify the session multiple times
+      let verified = false;
+      let attempts = 0;
+      const maxAttempts = 3;
 
-      // Verify the session
-      const response = await api.get(endpoints.checkAuth, {
-        withCredentials: true,
-      });
+      while (!verified && attempts < maxAttempts) {
+        try {
+          // Add increasing delay between attempts
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * (attempts + 1))
+          );
 
-      console.log("CheckAuth Full Response:", {
-        data: response.data,
-        status: response.status,
-        headers: response.headers,
-      });
+          console.log(`Verification attempt ${attempts + 1}/${maxAttempts}`);
+          const response = await api.get(endpoints.checkAuth, {
+            withCredentials: true,
+          });
 
-      const cookies = document.cookie;
-      console.log("All Cookies:", cookies);
+          console.log(`Attempt ${attempts + 1} response:`, {
+            data: response.data,
+            status: response.status,
+            headers: response.headers,
+          });
 
-      if (!response.data.authenticated) {
+          if (response.data.authenticated) {
+            console.log("Session verified successfully");
+            verified = true;
+            break;
+          } else {
+            console.log(`Attempt ${attempts + 1} failed, session not verified`);
+          }
+        } catch (verifyError) {
+          console.log(`Attempt ${attempts + 1} error:`, verifyError);
+        }
+        attempts++;
+      }
+
+      if (!verified) {
         console.error(
-          "Authentication check failed. Full response:",
-          response.data
+          "Failed to verify session after",
+          maxAttempts,
+          "attempts"
         );
         setUser(null);
         localStorage.removeItem("user");
-        throw new Error("Authentication failed");
+        throw new Error("Could not establish session after multiple attempts");
       }
     } catch (error) {
       console.error("Login verification error details:", {

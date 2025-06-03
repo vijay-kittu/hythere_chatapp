@@ -45,26 +45,49 @@ export const AuthProvider = ({ children }) => {
   const login = async (userData) => {
     try {
       console.log("Starting login verification...");
-      // Verify the session immediately after login
+      console.log("UserData received:", userData);
+
+      // Store user data first
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      // Add a small delay before checking auth
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // Verify the session
       const response = await api.get(endpoints.checkAuth, {
         withCredentials: true,
       });
 
-      console.log("CheckAuth Response:", response.data);
-      console.log("Session Cookie:", document.cookie);
+      console.log("CheckAuth Full Response:", {
+        data: response.data,
+        status: response.status,
+        headers: response.headers,
+      });
 
-      if (response.data.authenticated) {
-        setUser(userData);
-        localStorage.setItem("user", JSON.stringify(userData));
-      } else {
-        console.error("Authentication check failed:", response.data);
+      const cookies = document.cookie;
+      console.log("All Cookies:", cookies);
+
+      if (!response.data.authenticated) {
+        console.error(
+          "Authentication check failed. Full response:",
+          response.data
+        );
+        setUser(null);
+        localStorage.removeItem("user");
         throw new Error("Authentication failed");
       }
     } catch (error) {
       console.error("Login verification error details:", {
         message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
+        response: error.response
+          ? {
+              data: error.response.data,
+              status: error.response.status,
+              headers: error.response.headers,
+            }
+          : "No response object",
+        stack: error.stack,
       });
       setUser(null);
       localStorage.removeItem("user");

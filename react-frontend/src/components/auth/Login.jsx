@@ -28,9 +28,13 @@ export default function Login() {
     setError('');
     
     try {
-      console.log('Attempting login with:', { email: formData.email });
+      console.log('Attempting login with:', formData);
       const response = await api.post(endpoints.login, formData);
-      console.log('Login response:', response.data);
+      console.log('Login response:', {
+        data: response.data,
+        status: response.status,
+        headers: response.headers
+      });
       
       if (response.data) {
         console.log('Login successful, attempting to establish session...');
@@ -40,15 +44,19 @@ export default function Login() {
     } catch (err) {
       console.error('Login error details:', {
         message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-        headers: err.response?.headers
+        response: err.response ? {
+          data: err.response.data,
+          status: err.response.status,
+          headers: err.response.headers,
+        } : 'No response object',
+        stack: err.stack
       });
       
       if (err.message === 'Authentication failed') {
         setError('Session could not be established. Please try again.');
       } else {
-        setError(err.response?.data?.error || 'Error logging in. Please try again.');
+        const errorMessage = err.response?.data?.error || err.message || 'Error logging in. Please try again.';
+        setError(`Login failed: ${errorMessage}`);
       }
       // Clear password field on error
       setFormData(prev => ({

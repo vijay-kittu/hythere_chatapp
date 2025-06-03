@@ -110,18 +110,34 @@ router.post("/login", async (req, res) => {
 
 // Check Authentication Status
 router.get("/check", (req, res) => {
-  console.log("Checking auth status. Session details:", {
-    id: req.session?.id,
-    userId: req.session?.userId,
-    cookie: req.session?.cookie,
+  console.log("Checking auth status. Full request details:", {
+    session: req.session,
+    sessionID: req.sessionID,
+    cookies: req.cookies,
+    headers: req.headers,
   });
 
   if (req.session && req.session.userId) {
     console.log("Session is valid for user:", req.session.userId);
-    res.json({ authenticated: true, userId: req.session.userId });
+    res.json({
+      authenticated: true,
+      userId: req.session.userId,
+      sessionId: req.sessionID,
+    });
   } else {
-    console.log("No valid session found");
-    res.json({ authenticated: false });
+    console.log("No valid session found. Request details:", {
+      sessionExists: !!req.session,
+      sessionID: req.sessionID,
+      cookies: req.cookies,
+    });
+    res.json({
+      authenticated: false,
+      debug: {
+        sessionExists: !!req.session,
+        sessionID: req.sessionID,
+        hasCookies: !!req.cookies,
+      },
+    });
   }
 });
 

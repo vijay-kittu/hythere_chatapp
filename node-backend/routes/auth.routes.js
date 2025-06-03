@@ -70,13 +70,19 @@ router.post("/login", async (req, res) => {
     }
 
     console.log("Setting session for user:", user._id);
+    console.log("Current session:", req.session);
     req.session.userId = user._id;
+
     req.session.save((err) => {
       if (err) {
         console.error("Session save error:", err);
         return res.status(500).json({ error: "Error saving session" });
       }
-      console.log("Session saved successfully. Session ID:", req.session.id);
+      console.log("Session saved successfully. Session details:", {
+        id: req.session.id,
+        userId: req.session.userId,
+        cookie: req.session.cookie,
+      });
       res.json({
         _id: user._id,
         email: user.email,
@@ -90,17 +96,19 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Check auth status
+// Check Authentication Status
 router.get("/check", (req, res) => {
-  console.log("Auth check - Session:", {
-    id: req.session.id,
-    userId: req.session.userId,
-    cookie: req.session.cookie,
+  console.log("Checking auth status. Session details:", {
+    id: req.session?.id,
+    userId: req.session?.userId,
+    cookie: req.session?.cookie,
   });
 
-  if (req.session.userId) {
+  if (req.session && req.session.userId) {
+    console.log("Session is valid for user:", req.session.userId);
     res.json({ authenticated: true, userId: req.session.userId });
   } else {
+    console.log("No valid session found");
     res.json({ authenticated: false });
   }
 });

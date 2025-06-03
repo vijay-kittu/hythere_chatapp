@@ -41,14 +41,14 @@ app.options("*", cors(corsOptions));
 // Apply CORS to all routes
 app.use(cors(corsOptions));
 
-// Log all requests for debugging
+// Log only non-sensitive request info
 app.use((req, res, next) => {
-  console.log("Incoming request:", {
-    method: req.method,
-    path: req.path,
-    origin: req.headers.origin,
-    headers: req.headers,
-  });
+  if (process.env.NODE_ENV !== "production") {
+    console.log("Request:", {
+      method: req.method,
+      path: req.path,
+    });
+  }
   next();
 });
 
@@ -81,27 +81,11 @@ const io = new Server(httpServer, {
 
 app.use(sessionMiddleware);
 
-// Add session debugging middleware
+// Simplified session debug middleware - only in development
 app.use((req, res, next) => {
-  const debugInfo = {
-    sessionId: req.sessionID,
-    userId: req.session?.userId,
-    cookies: req.cookies,
-    secure: req.secure,
-    protocol: req.protocol,
-    hostname: req.hostname,
-    headers: {
-      origin: req.headers.origin,
-      host: req.headers.host,
-      cookie: req.headers.cookie,
-    },
-  };
-  console.log("Request Debug Info:", debugInfo);
-
   // Add CORS headers to every response
   res.header("Access-Control-Allow-Credentials", "true");
   res.header("Access-Control-Allow-Origin", FRONTEND_URL);
-
   next();
 });
 

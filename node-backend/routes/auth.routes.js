@@ -72,29 +72,22 @@ router.post("/register", async (req, res) => {
 // Login
 router.post("/login", async (req, res) => {
   try {
-    console.log("Login attempt for:", req.body.email);
-    console.log("Request headers:", req.headers);
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
     if (!user) {
-      console.log("User not found:", email);
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      console.log("Invalid password for:", email);
       return res.status(401).json({ error: "Invalid credentials" });
     }
-
-    console.log("Setting session for user:", user._id);
-    console.log("Current session:", req.session);
 
     // Regenerate session when signing in to prevent fixation
     req.session.regenerate(function (err) {
       if (err) {
-        console.error("Session regeneration error:", err);
+        console.error("Session error:", err.message);
         return res.status(500).json({ error: "Error establishing session" });
       }
 
@@ -104,37 +97,21 @@ router.post("/login", async (req, res) => {
       // Save session before responding
       req.session.save(function (err) {
         if (err) {
-          console.error("Session save error:", err);
+          console.error("Session error:", err.message);
           return res.status(500).json({ error: "Error saving session" });
         }
 
-        const sessionInfo = {
-          id: req.sessionID,
-          userId: req.session.userId,
-          cookie: req.session.cookie,
-        };
-        console.log("Session saved successfully. Details:", sessionInfo);
-
-        // Ensure CORS headers are set
-        res.header("Access-Control-Allow-Credentials", "true");
-        res.header("Access-Control-Allow-Origin", process.env.FRONTEND_URL);
-
-        // Send response with debug info
+        // Send response
         res.json({
           _id: user._id,
           email: user.email,
           fullName: user.fullName,
           bio: user.bio,
-          debug: {
-            sessionId: req.sessionID,
-            cookies: req.cookies,
-            headers: req.headers,
-          },
         });
       });
     });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("Login error:", error.message);
     res.status(500).json({ error: "Server error" });
   }
 });

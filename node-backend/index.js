@@ -5,6 +5,7 @@ import { Server } from "socket.io";
 import session from "express-session";
 import { connectDB } from "./lib/db.js";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import authRoutes from "./routes/auth.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
 
@@ -21,7 +22,7 @@ app.use(express.json());
 app.set("trust proxy", 1);
 
 // Parse cookies
-app.use(require("cookie-parser")());
+app.use(cookieParser());
 
 // Configure CORS
 const corsOptions = {

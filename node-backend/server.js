@@ -59,14 +59,14 @@ const sessionMiddleware = session({
   saveUninitialized: false,
   proxy: true,
   cookie: {
-    secure: true, // Always use secure cookies in production and development
+    secure: true,
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: "none", // Required for cross-site cookies
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: "none",
     path: "/",
   },
   name: "sessionId",
-  rolling: true, // Refresh cookie on each request
+  rolling: true,
 });
 
 // Configure Socket.IO with the same CORS settings

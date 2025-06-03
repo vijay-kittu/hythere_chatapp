@@ -5,6 +5,24 @@ import { isAuthenticated } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
+// Add CORS headers middleware for auth routes
+router.use((req, res, next) => {
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Origin", process.env.FRONTEND_URL);
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, Cookie, Set-Cookie"
+  );
+  res.header("Access-Control-Expose-Headers", "Set-Cookie");
+
+  // Handle preflight requests
+  if (req.method === "OPTIONS") {
+    return res.status(204).end();
+  }
+  next();
+});
+
 // Register
 router.post("/register", async (req, res) => {
   try {
@@ -55,6 +73,7 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     console.log("Login attempt for:", req.body.email);
+    console.log("Request headers:", req.headers);
     const { email, password } = req.body;
 
     const user = await User.findOne({ email });
@@ -96,23 +115,7 @@ router.post("/login", async (req, res) => {
         };
         console.log("Session saved successfully. Details:", sessionInfo);
 
-        // Set a test auth cookie
-        res.cookie("authTest", "authenticated", {
-          secure: true,
-          sameSite: "none",
-          httpOnly: false,
-          maxAge: 24 * 60 * 60 * 1000,
-        });
-
-        // Set session cookie explicitly
-        res.cookie("sessionId", req.sessionID, {
-          secure: true,
-          sameSite: "none",
-          httpOnly: true,
-          maxAge: 24 * 60 * 60 * 1000,
-        });
-
-        // Set response headers
+        // Ensure CORS headers are set
         res.header("Access-Control-Allow-Credentials", "true");
         res.header("Access-Control-Allow-Origin", process.env.FRONTEND_URL);
 

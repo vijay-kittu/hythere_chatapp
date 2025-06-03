@@ -14,15 +14,6 @@ const httpServer = createServer(app);
 
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
 
-const io = new Server(httpServer, {
-  cors: {
-    origin: FRONTEND_URL,
-    credentials: true,
-    methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-  },
-});
-
 // Middleware
 app.use(express.json());
 
@@ -32,15 +23,33 @@ app.set("trust proxy", 1);
 // Parse cookies
 app.use(require("cookie-parser")());
 
-app.use(
-  cors({
-    origin: FRONTEND_URL,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Set-Cookie"],
-    exposedHeaders: ["Set-Cookie"],
-  })
-);
+// Configure CORS
+const corsOptions = {
+  origin: FRONTEND_URL,
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Set-Cookie"],
+  exposedHeaders: ["Set-Cookie"],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
+
+// Handle preflight requests
+app.options("*", cors(corsOptions));
+
+// Apply CORS to all routes
+app.use(cors(corsOptions));
+
+// Log all requests for debugging
+app.use((req, res, next) => {
+  console.log("Incoming request:", {
+    method: req.method,
+    path: req.path,
+    origin: req.headers.origin,
+    headers: req.headers,
+  });
+  next();
+});
 
 // Session middleware - MUST be before routes
 const sessionMiddleware = session({
@@ -53,11 +62,20 @@ const sessionMiddleware = session({
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: "none", // Required for cross-site cookies
-    domain: undefined, // Let the browser set the cookie domain
     path: "/",
   },
   name: "sessionId",
   rolling: true, // Refresh cookie on each request
+});
+
+// Configure Socket.IO with the same CORS settings
+const io = new Server(httpServer, {
+  cors: {
+    origin: FRONTEND_URL,
+    credentials: true,
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+  },
 });
 
 app.use(sessionMiddleware);
@@ -79,13 +97,9 @@ app.use((req, res, next) => {
   };
   console.log("Request Debug Info:", debugInfo);
 
-  // Add a test cookie to verify cookie setting is working
-  res.cookie("testCookie", "test", {
-    secure: true,
-    sameSite: "none",
-    httpOnly: false, // So we can see it in JavaScript
-    maxAge: 24 * 60 * 60 * 1000,
-  });
+  // Add CORS headers to every response
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.header("Access-Control-Allow-Origin", FRONTEND_URL);
 
   next();
 });

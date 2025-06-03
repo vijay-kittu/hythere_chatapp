@@ -78,16 +78,28 @@ router.post("/login", async (req, res) => {
         console.error("Session save error:", err);
         return res.status(500).json({ error: "Error saving session" });
       }
-      console.log("Session saved successfully. Session details:", {
+
+      const sessionDetails = {
         id: req.session.id,
         userId: req.session.userId,
         cookie: req.session.cookie,
-      });
+      };
+      console.log(
+        "Session saved successfully. Session details:",
+        sessionDetails
+      );
+
+      // Set additional headers for debugging
+      res.header("Access-Control-Allow-Credentials", "true");
+      res.header("Access-Control-Expose-Headers", "Set-Cookie");
+
       res.json({
         _id: user._id,
         email: user.email,
         fullName: user.fullName,
         bio: user.bio,
+        sessionInfo:
+          process.env.NODE_ENV === "development" ? sessionDetails : undefined,
       });
     });
   } catch (error) {

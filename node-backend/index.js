@@ -18,6 +18,8 @@ const io = new Server(httpServer, {
   cors: {
     origin: FRONTEND_URL,
     credentials: true,
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
   },
 });
 
@@ -27,9 +29,9 @@ app.use(
   cors({
     origin: FRONTEND_URL,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
-    exposedHeaders: ["set-cookie"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie", "Set-Cookie"],
+    exposedHeaders: ["Set-Cookie"],
   })
 );
 
@@ -38,6 +40,7 @@ const sessionMiddleware = session({
   secret: process.env.SESSION_SECRET || "chat-app-secret",
   resave: false,
   saveUninitialized: false,
+  proxy: true,
   cookie: {
     secure: process.env.NODE_ENV === "production", // Set to true in production
     httpOnly: true,
@@ -50,6 +53,9 @@ const sessionMiddleware = session({
   },
   name: "sessionId", // Add a custom name to track the cookie easier
 });
+
+// Add trust proxy setting
+app.set("trust proxy", 1);
 
 app.use(sessionMiddleware);
 

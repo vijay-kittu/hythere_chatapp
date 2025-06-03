@@ -44,19 +44,28 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (userData) => {
     try {
+      console.log("Starting login verification...");
       // Verify the session immediately after login
       const response = await api.get(endpoints.checkAuth, {
         withCredentials: true,
       });
 
+      console.log("CheckAuth Response:", response.data);
+      console.log("Session Cookie:", document.cookie);
+
       if (response.data.authenticated) {
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
       } else {
+        console.error("Authentication check failed:", response.data);
         throw new Error("Authentication failed");
       }
     } catch (error) {
-      console.error("Login verification error:", error);
+      console.error("Login verification error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
       setUser(null);
       localStorage.removeItem("user");
       throw error;

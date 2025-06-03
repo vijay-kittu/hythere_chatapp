@@ -11,9 +11,12 @@ import chatRoutes from "./routes/chat.routes.js";
 dotenv.config();
 const app = express();
 const httpServer = createServer(app);
+
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: FRONTEND_URL,
     credentials: true,
   },
 });
@@ -22,7 +25,7 @@ const io = new Server(httpServer, {
 app.use(express.json());
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: FRONTEND_URL,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type"],
@@ -31,11 +34,11 @@ app.use(
 
 // Session middleware - MUST be before routes
 const sessionMiddleware = session({
-  secret: "chat-app-secret",
+  secret: process.env.SESSION_SECRET || "chat-app-secret",
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // Set to false for development
+    secure: process.env.NODE_ENV === "production", // Set to true in production
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: "lax",

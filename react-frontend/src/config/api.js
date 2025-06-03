@@ -1,6 +1,9 @@
-const API_BASE_URL = "http://localhost:5000/api";
-const FRONTEND_URL = "http://localhost:3000";
-export const SOCKET_URL = "http://localhost:5000";
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+const FRONTEND_URL =
+  process.env.REACT_APP_FRONTEND_URL || "http://localhost:3000";
+export const SOCKET_URL =
+  process.env.REACT_APP_SOCKET_URL || "http://localhost:5000";
 
 export const endpoints = {
   // Auth endpoints

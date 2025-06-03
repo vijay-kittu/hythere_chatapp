@@ -32,12 +32,21 @@ export default function Login() {
       });
       
       if (response.data) {
-        login(response.data);
+        await login(response.data);
         navigate('/', { replace: true });
       }
     } catch (err) {
       console.error('Login error:', err);
-      setError(err.response?.data?.error || 'Error logging in. Please try again.');
+      if (err.message === 'Authentication failed') {
+        setError('Session could not be established. Please try again.');
+      } else {
+        setError(err.response?.data?.error || 'Error logging in. Please try again.');
+      }
+      // Clear password field on error
+      setFormData(prev => ({
+        ...prev,
+        password: ''
+      }));
     } finally {
       setIsLoading(false);
     }

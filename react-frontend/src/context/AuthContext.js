@@ -11,17 +11,56 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user exists in localStorage
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    const verifySession = async () => {
+      try {
+        // Check if user exists in localStorage
+        const storedUser = localStorage.getItem("user");
+
+        if (storedUser) {
+          // Verify session with backend
+          const response = await api.get(endpoints.checkAuth, {
+            withCredentials: true,
+          });
+
+          if (response.data.isAuthenticated) {
+            setUser(JSON.parse(storedUser));
+          } else {
+            // If session is invalid, clear localStorage
+            localStorage.removeItem("user");
+            setUser(null);
+          }
+        }
+      } catch (error) {
+        console.error("Session verification error:", error);
+        localStorage.removeItem("user");
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifySession();
   }, []);
 
-  const login = (userData) => {
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
+  const login = async (userData) => {
+    try {
+      // Verify the session immediately after login
+      const response = await api.get(endpoints.checkAuth, {
+        withCredentials: true,
+      });
+
+      if (response.data.isAuthenticated) {
+        setUser(userData);
+        localStorage.setItem("user", JSON.stringify(userData));
+      } else {
+        throw new Error("Authentication failed");
+      }
+    } catch (error) {
+      console.error("Login verification error:", error);
+      setUser(null);
+      localStorage.removeItem("user");
+      throw error;
+    }
   };
 
   const logout = async () => {

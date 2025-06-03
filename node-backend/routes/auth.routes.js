@@ -96,22 +96,37 @@ router.post("/login", async (req, res) => {
         };
         console.log("Session saved successfully. Details:", sessionInfo);
 
-        // Set additional headers
-        res.header("Access-Control-Allow-Credentials", "true");
+        // Set a test auth cookie
+        res.cookie("authTest", "authenticated", {
+          secure: true,
+          sameSite: "none",
+          httpOnly: false,
+          maxAge: 24 * 60 * 60 * 1000,
+        });
 
-        // Send response with session debug info in development
+        // Set session cookie explicitly
+        res.cookie("sessionId", req.sessionID, {
+          secure: true,
+          sameSite: "none",
+          httpOnly: true,
+          maxAge: 24 * 60 * 60 * 1000,
+        });
+
+        // Set response headers
+        res.header("Access-Control-Allow-Credentials", "true");
+        res.header("Access-Control-Allow-Origin", process.env.FRONTEND_URL);
+
+        // Send response with debug info
         res.json({
           _id: user._id,
           email: user.email,
           fullName: user.fullName,
           bio: user.bio,
-          debug:
-            process.env.NODE_ENV === "development"
-              ? {
-                  sessionId: req.sessionID,
-                  cookie: req.session.cookie,
-                }
-              : undefined,
+          debug: {
+            sessionId: req.sessionID,
+            cookies: req.cookies,
+            headers: req.headers,
+          },
         });
       });
     });

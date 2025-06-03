@@ -29,6 +29,9 @@ app.use(express.json());
 // Add trust proxy setting BEFORE other middleware
 app.set("trust proxy", 1);
 
+// Parse cookies
+app.use(require("cookie-parser")());
+
 app.use(
   cors({
     origin: FRONTEND_URL,
@@ -46,15 +49,12 @@ const sessionMiddleware = session({
   saveUninitialized: false,
   proxy: true,
   cookie: {
-    secure: process.env.NODE_ENV === "production",
+    secure: true, // Always use secure cookies in production and development
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    sameSite: "none", // Required for cross-site cookies
+    domain: undefined, // Let the browser set the cookie domain
     path: "/",
-    domain:
-      process.env.NODE_ENV === "production"
-        ? process.env.COOKIE_DOMAIN
-        : undefined,
   },
   name: "sessionId",
   rolling: true, // Refresh cookie on each request
@@ -78,6 +78,15 @@ app.use((req, res, next) => {
     },
   };
   console.log("Request Debug Info:", debugInfo);
+
+  // Add a test cookie to verify cookie setting is working
+  res.cookie("testCookie", "test", {
+    secure: true,
+    sameSite: "none",
+    httpOnly: false, // So we can see it in JavaScript
+    maxAge: 24 * 60 * 60 * 1000,
+  });
+
   next();
 });
 

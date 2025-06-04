@@ -16,7 +16,7 @@ export default function FriendsList({ friends, selectedFriend, onSelectFriend })
           </div>
           <div className="ml-3 text-left">
             <p className="text-sm font-medium text-gray-900">{friend.fullName}</p>
-            <p className="text-xs text-gray-500">{friend.email}</p>
+            <p className="text-xs text-gray-500">{friend.bio}</p>
           </div>
         </button>
       ))}
